@@ -1,13 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Card from './components/Card';
+import Header from './components/Header';
+import useAppBadge from './hooks/useAppBadge';
 import shuffle from './utilities/shuffle';
 
 function App() {
+  const [wins, setWins] = useState(0); // Win streak
   const [cards, setCards] = useState(shuffle);
   const [pickOne, setPickOne] = useState(null); // First selection
   const [pickTwo, setPickTwo] = useState(null); // Second selection
   const [disabled, setDisabled] = useState(false); // Delay handler
-  const [wins, setWins] = useState(0); // Win streak
+  const [setBadge, clearBadge] = useAppBadge();
 
   const handleClick = (card) => {
     if (!disabled) {
@@ -19,7 +22,14 @@ function App() {
     setPickOne(null);
     setPickTwo(null);
     setDisabled(false);
-  }
+  };
+
+  const handleNewGame = () => {
+    setWins(0);
+    handleTurn();
+    setCards(shuffle);
+    clearBadge();
+  };
 
   useEffect(() => {
     let pickTimer;
@@ -63,19 +73,23 @@ function App() {
       console.log('You win!');
       setWins(wins + 1);
       handleTurn();
+      setBadge();
       setCards(shuffle);
     }
-  }, [cards, wins])
+  }, [cards, wins, setBadge])
 
   return (
     <>
+      <Header handleNewGame={handleNewGame} wins={wins} />
+
       <div className="grid">
-        {cards.map((card) => {
-          const { image, id, matched } = card;
+        {cards.map((card, idx) => {
+          const { image, matched } = card;
 
           return (
             <Card
-              key={id}
+              key={idx}
+              card={card}
               image={image}
               selected={card === pickOne || card === pickTwo || matched}
               onClick={() => handleClick(card)}
